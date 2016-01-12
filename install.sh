@@ -38,7 +38,6 @@ check_command_exist()
 
 check_run_time()
 {
-	echo "Checking configuration"
 	local count
 	for cmd in {bash,expect,gpg}
 	do
@@ -51,7 +50,7 @@ check_run_time()
 	done
 	
 	if [[ "$count" -ne 0 ]];then
-		cmd_status=$(grep 1 ${lib_path}/${conf} | awk '{print$1}')
+		cmd_status=$(grep 1 ${lib_path}/${conf} | awk '{print$1}' | tr -d '\n')
 		test ! -z "$cmd_status" && echo "Commands $cmd_status does not exist" && exit 1
 	fi
 	
@@ -67,7 +66,7 @@ check_run_time()
 #fi
 
 test -f ${lib_path}/${conf}  && check_run_time || \
-{ mkdir -p ${lib_path} || exit ${DIR_PERM} && check_command_exist bash expect gpg; } 
+{ mkdir -p ${lib_path} || exit ${DIR_PERM} && echo "Checking Pre-requisites" && check_command_exist bash expect gpg; } 
 
 
 

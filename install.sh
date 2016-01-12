@@ -22,10 +22,11 @@ DIR_PERM=68
 
 #Functions
 
-check_command_exist()
+check_command_exist() 
 {
-	echo "Checking pre-requisites"
-	test "$#" -eq 0 && echo "ERROR:${NO_PARAM}" && exit 1
+	test "$#" -eq 0 && echo "ERROR:${NO_PARAM}" && exit 1 #Checking Number of Arguments
+	
+	#Check commands exist or not
 	for inp in ${@}
 	do
 		[[ $(command -v $inp) ]]
@@ -39,6 +40,8 @@ check_command_exist()
 check_run_time()
 {
 	local count
+	
+	#Check configuration file,check for pre-requisites again & update ${conf}
 	for cmd in {bash,expect,gpg}
 	do
 		cmd_status=$(grep "$cmd" ${lib_path}/${conf} | awk '{print$2}')

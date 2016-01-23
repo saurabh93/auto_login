@@ -12,6 +12,7 @@
 clear #Clear screen
 
 #Variables
+HOME=${HOME:-$(pwd)}
 lib_path=${HOME}/.lib_auto
 conf='auto_login.conf'
 
@@ -59,8 +60,20 @@ check_run_time()
 	
 }
 
-	
-	
+check_files()
+{
+	egrep '.bashrc|profile' ${lib_path}/${conf} && return 0 	
+	for files in {.bashrc,.profile,.bash_profile}
+	do
+		[[ -f ${HOME}/${files} ]]
+		rc=$?;test "$rc" -eq 0 && status='OK' || status='Not Found'
+                echo -e "${files}:  $rc" >> ${lib_path}/${conf}
+                echo -e "            ${files}: $status" 
+                sleep 1
+
+	done
+} 
+		
 
 #Search prerequisites
 
@@ -68,9 +81,7 @@ check_run_time()
 #	echo "Not a linux system.Exiting"
 #fi
 
-test -f ${lib_path}/${conf}  && check_run_time || \
-{ mkdir -p ${lib_path} || exit ${DIR_PERM} && echo "Checking Pre-requisites" && check_command_exist bash expect gpg; } 
-
-
+test -f ${lib_path}/${conf}  && check_run_time && check_files|| \
+{ mkdir -p ${lib_path} || exit ${DIR_PERM} && echo "Checking Pre-requisites" && check_command_exist bash expect gpg && check_files; } 
 
 

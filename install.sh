@@ -43,12 +43,13 @@ check_command_exist()
 
 check_run_time()
 {
+	echo -e "${conf} found.Checking for config"
 	local count
 	
 	#Check configuration file,check for pre-requisites again & update ${conf}
 	for cmd in "${CMD_LIST[@]}"
 	do
-		cmd_status=$(grep "$cmd" ${lib_path}/${conf} | awk '{print$2}')
+		cmd_status=$(fgrep "^$cmd" ${lib_path}/${conf} | awk '{print$2}')
 		if [[ "$cmd_status" -ne 0 ]];then
 			sed -i "/$cmd/d" ${lib_path}/${conf}
 			check_command_exist "$cmd"			
@@ -60,12 +61,12 @@ check_run_time()
 		cmd_status="$(grep 1 ${lib_path}/${conf} | awk '{print$1}' | tr -d '\n')"
 		test ! -z "$cmd_status" && echo "Commands $cmd_status does not exist" && exit 1
 	fi
-	
+	sleep 2
 }
 
 check_files()
 {
-	egrep '.bashrc|profile' ${lib_path}/${conf} && return 0 	
+	egrep -q '.bashrc|profile' ${lib_path}/${conf} && return 0 	
 	for files in "${FILE_LSIT[@]}"
 	do
 		[[ -s ${HOME}/${files} ]]
@@ -83,6 +84,7 @@ check_files()
 { test -f ${lib_path}/${conf}  && check_run_time && check_files; }|| \
 { mkdir -p ${lib_path} || exit ${DIR_PERM} && echo "Checking Pre-requisites" && check_command_exist bash expect gpg && check_files; } 
 
+echo -e "Checking for files for copying."
 for num in {0,1,2}
 do
 	status=$(fgrep ${FILE_LSIT[$num]} ${lib_path}/${conf} | awk '{print$2}')

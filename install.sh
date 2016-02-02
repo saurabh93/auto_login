@@ -21,6 +21,9 @@ count=0
 NO_PARAM=67
 NO_PERM=68
 NO_FILE=65
+NO_INP=66
+
+#ARRAYS
 CMD_LIST=(bash expect gpg)
 FILE_LSIT=(.bashrc .profile .bash_profile .gnupg/pubring.gpg .gnupg/secring.gpg)
 
@@ -84,7 +87,7 @@ check_files()
 { test -f ${lib_path}/${conf}  && check_run_time && check_files; }|| \
 { mkdir -p ${lib_path} || exit ${DIR_PERM} && echo "Checking Pre-requisites" && check_command_exist bash expect gpg && check_files; } 
 
-echo -e "Checking for files for copying."
+echo -e "Checking files for copying."
 for num in {0,1,2}
 do
 	status=$(fgrep ${FILE_LSIT[$num]} ${lib_path}/${conf} | awk '{print$2}')
@@ -94,3 +97,21 @@ do
 		echo -e "${NO_PERM}" 
 	fi
 done
+
+#GPG check
+
+for files in ${FILE_LSIT[@]:3:1}
+do
+	status=$(grep ${files} ${lib_path}/${conf} | awk '{print$2}')
+	
+	if [[ "$status" -eq 1 ]];then
+		echo -e "gpg is not setup.Want to setup Y/N?"
+		read -t 5 ans || exit ${NO_INP}
+		
+		if [[ "$ans" -eq 'Y' ]];then
+			gpg --gen-key
+		else
+			exit ${NO_INP}
+		fi
+	fi
+done	

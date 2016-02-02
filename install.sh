@@ -15,6 +15,7 @@ clear #Clear screen
 HOME=${HOME:-$(pwd)}
 lib_path=${HOME}/.lib_auto
 conf='auto_login.conf'
+src=${HOME}/src
 count=0
 
 #ERROR's
@@ -26,7 +27,7 @@ NO_INP=66
 #ARRAYS
 CMD_LIST=(bash expect gpg)
 FILE_LSIT=(.bashrc .profile .bash_profile .gnupg/pubring.gpg .gnupg/secring.gpg)
-
+SRC_LIST=(central.sh login.exp)
 #Functions
 
 check_command_exist() 
@@ -114,4 +115,4 @@ do
 			exit ${NO_INP}
 		fi
 	fi
-done	
+done

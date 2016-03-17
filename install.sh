@@ -2,11 +2,9 @@
 
 
 #### Description: Install auto_login functionality in bash enviorment
-#### Requirements: Bash Version >= 3.2,expect package,bashrc or bash_profile
-#### Files/Directory  
-####################:Directory= .lib in ${HOME}
-####################:Files= auto_login.conf (Configuration Created)
-####################:
+#### Requirements: Bash Version >= 3.2,expect package,bashrc or bash_profile & gnupg
+#### Directory= .lib in ${HOME}
+#### Files:auto_login.conf in ${Home}  
 
 
 clear #Clear screen
@@ -26,8 +24,8 @@ NO_INP=66
 CMD_NOT_FOUND=70
 
 #ARRAYS
-CMD_LIST=(bash expect gpg)
-FILE_LSIT=(f.bashrc f.profile f.bash_profile f.gnupg/pubring.gpg f.gnupg/secring.gpg)
+CMD_LIST=(bash expect gpg ssh)
+FILE_LIST=(f.bashrc f.profile f.bash_profile f.gnupg/pubring.gpg f.gnupg/secring.gpg)
 SRC_LIST=(central.sh login.exp)
 #Functions
 
@@ -84,26 +82,26 @@ check_run_time()
 		
 #Search prerequisites
 
-{ test -f ${lib_path}/${conf}  && check_run_time ${CMD_LIST[@]} ${FILE_LSIT[@]}; }|| \
+{ test -f ${lib_path}/${conf}  && check_run_time "${CMD_LIST[@]}" "${FILE_LIST[@]}"; }|| \
 { mkdir -p ${lib_path} || exit ${DIR_PERM} && echo "Checking Pre-requisites" && \
-  check_command_exist ${CMD_LIST[@]} && check_files ${FILE_LSIT[@]}; } 
+  check_command_exist "${CMD_LIST[@]}" && check_files "${FILE_LIST[@]}"; } 
 
 
 echo -e "Checking files for copying."
 for num in {0,1,2}
 do
-	status=$(fgrep ${FILE_LSIT[$num]} ${lib_path}/${conf} | awk '{print$2}')
+	status=$(fgrep ${FILE_LIST[$num]} ${lib_path}/${conf} | awk '{print$2}')
 
 	[[ "$status" -eq 1 ]] && count=$((count+1)) 
 	if [[ "$count" -eq 3 ]];then
-		{ [[ -f /etc/skel/${FILE_LSIT[0]} ]] && cp -v /etc/skel/${FILE_LSIT[0]} ${HOME}; } ||  \
+		{ [[ -f /etc/skel/${FILE_LIST[0]} ]] && cp -v /etc/skel/${FILE_LIST[0]} ${HOME}; } ||  \
 		touch ${HOME}/.bashrc || echo -e "${NO_PERM}" 
 	fi
 done
 
 #GPG check
 
-for files in ${FILE_LSIT[@]:3:1}
+for files in "${FILE_LIST[@]:3:1}"
 do
 	status=$(grep ${files} ${lib_path}/${conf} | awk '{print$2}')
 	

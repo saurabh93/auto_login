@@ -19,7 +19,7 @@ usage()
 	ERROR=${ERROR:-No_ERROR}
 	echo "ERROR: $ERROR"
 	echo -e "
-		Usage: $0 [OPTION] [password] [input-file]..
+		Usage: $0 [OPTION] [input-file]..
 			
 		-f
 			Specify the fiename containing password.Encrypted password & ip will be redirect to stdout	 	
@@ -124,7 +124,7 @@ if [[ ! -z "${files[@]}" ]];then
 	sed -n '1p' ${files[1]} | grep -qo ^$ip_patt$;rc2=$?
 	
 	{ [ $rc -eq 0 ] && ip_file="${files[0]}" && pass_file="${files[1]}"; } || \
-	{ [ $rc2 -eq 0 ] && ip_file="${files[1]}" && pass_file="$files[0]}"; } \
+	{ [ $rc2 -eq 0 ] && ip_file="${files[1]}" && pass_file="${files[0]}"; } \
         || usage FILE_FORMAT
 	
 	paste -d'\t' ${ip_file} ${pass_file} > $tmpfile

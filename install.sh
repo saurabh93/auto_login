@@ -10,7 +10,7 @@
 clear #Clear screen
 
 #Variables
-HOME=${HOME:-$(pwd)}
+HOME=${HOME:-$(dirname $(pwd))}
 lib_path=${HOME}/.lib_auto
 conf='auto_login.conf'
 src=${HOME}/src
@@ -99,6 +99,7 @@ do
 	fi
 done
 
+sleep 1
 #GPG check
 
 for files in "${FILE_LIST[@]:3:1}"
@@ -107,12 +108,24 @@ do
 	
 	if [[ "$status" -eq 1 ]];then
 		echo -e "gpg is not setup.Want to setup Y/N?"
-		read -t 5 ans || exit ${NO_INP}
+		read -t 20 ans || exit ${NO_INP}
 		
 		if [[ "$ans" = 'Y' ]];then
 			gpg --gen-key
 		else
+			echo "NO INPUT"
 			exit ${NO_INP}
 		fi
 	fi
 done
+
+sleep 2
+##Password file genration
+
+printf %b "\nPlease provide the file with password & ip list With below Mentioned Format.
+FORMAT: File must contain ip & password on same line seperated with 'space or tab' with each set on new line e.g
+192.168.1.1 password1 or 192.168.1.1	password1
+192.168.1.2 password2\n"
+sleep 2
+read -t 200 -rp "Enter FileName=" file_name || { echo "NO INPUT" && exit ${NO_INP}; }
+

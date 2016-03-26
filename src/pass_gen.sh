@@ -31,7 +31,7 @@ usage()
 			Specify password & ip on stdin,output will redirect to stdout
 			FORMAT:see e.g below
 
-		-g,	
+		-g	
 			Specify two files containing password & ip respectively.Output will be redirected to ${FILENAME}
 		        FORMAT: Map both file with there contents i.e first line of passowrd_file, must contain the
 				PASSWORD for first IP, in ip_list_file.And Provide absoulte path
@@ -40,7 +40,7 @@ usage()
 		NOTE: IF MULTIPLE OPTIONS PROVIDED SAME WILL BE PROCESSED IN ABOVE SEQUENCE
 	e.g
 		$0 -s 'password ip' (sequence should be as shown)
-		$0 -f filename
+		$0 -f  filename
 		$0 -g 'file1 file2'
 	"
 	exit 	
@@ -49,13 +49,13 @@ usage()
 logic_encrypt()
 {
 	local pass=$1 ip=$2
-		rand=$(( $RANDOM % ${#array[@]}))
+		rand=$(( RANDOM % ${#array[@]}))
         	iter=${array[$rand]}
                 for((i=0;i<iter;i++))
                 do
                         pass=$(echo "$pass" | base64 -w 0)
                 done
-		iter=$(echo $iter | base64);ip=$(echo $ip | base64)
+		iter=$(echo "$iter" | base64);ip=$(echo "$ip" | base64)
         echo -e "$ip&$pass&$iter"
 
 }
@@ -83,19 +83,15 @@ if [[ -z "$file" && -z "${std[@]}" && -z "${files[@]}" ]];then
 	usage
 fi
 
-#if [[ ! -z "$file" && ! -z "$std" ]];then
-#	usage "Provide Single input at a time"
-#	exit 1
-#fi
 	
 if [[ ! -z "$file" ]];then
 	echo "Encrypting Input file"
-	IFS=$'\n'
-	for field in $(cat $file)
+
+	while IFS=$'\n' read -r field
 	do
-		f1=$(echo $field | awk '{print$1}')
-		f2=$(echo $field | awk '{print$2}')
-		[ -z $f1 ] || [ -z $f2 ]  && usage FILE_FORMAT
+		f1=$(echo "$field" | awk '{print$1}')
+		f2=$(echo "$field" | awk '{print$2}')
+		[ -z "$f1" ] || [ -z "$f2" ]  && usage FILE_FORMAT
 		
 		echo "$f1" | grep -qo ^$ip_patt$;rc=$?
 		echo "$f2" | grep -qo ^$ip_patt$;rc2=$?
@@ -105,7 +101,7 @@ if [[ ! -z "$file" ]];then
 		fin=$(logic_encrypt "$pass" "$ip")
 		
 		echo "$fin"
-	done
+	done < "$file"
 fi
 		
 if [[ ! -z "${std[@]}" ]];then
@@ -113,29 +109,30 @@ if [[ ! -z "${std[@]}" ]];then
 	
 	fin=$(logic_encrypt "${std[0]}" "${std[1]}")
 
-	echo $fin
+	echo "$fin"
 fi
 
 if [[ ! -z "${files[@]}" ]];then
-	IFS=$'\n'
+	
 	echo -e "\nCreating Encrypted file"
 	
-	sed -n '1p' ${files[0]} | grep -qo ^$ip_patt$;rc=$?
-	sed -n '1p' ${files[1]} | grep -qo ^$ip_patt$;rc2=$?
+	sed -n '1p' "${files[0]}" | grep -qo ^$ip_patt$;rc=$?
+	sed -n '1p' "${files[1]}" | grep -qo ^$ip_patt$;rc2=$?
 	
 	{ [ $rc -eq 0 ] && ip_file="${files[0]}" && pass_file="${files[1]}"; } || \
 	{ [ $rc2 -eq 0 ] && ip_file="${files[1]}" && pass_file="${files[0]}"; } \
         || usage FILE_FORMAT
 	
-	paste -d'\t' ${ip_file} ${pass_file} > $tmpfile
+	paste -d'\t' "${ip_file}" "${pass_file}" > "$tmpfile"
 
-	for field in $(cat $tmpfile)
+	while IFS=$'\n' read -r field
 	do
-		ip=$(echo $field | awk '{print$1}')
-		pass=$(echo $field | awk '{print$2}')
+		ip=$(echo "$field" | awk '{print$1}')
+		pass=$(echo "$field" | awk '{print$2}')
 	
 		fin=$(logic_encrypt "$pass" "$ip")
 	
 		echo "$fin" >> $FILENAME
-	done
+	done < "$tmpfile"
+	rm -vf "$tmpfile"
 fi

@@ -13,6 +13,11 @@ tmpfile='tmp'
 FILENAME='encrypt.file'
 ip_patt='[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}'
 
+#ERRORS
+FILE_NOT_EXIST=65
+FILE_FORMAT=71
+SYNTAX_ERROR=72
+
 usage()
 {
 	ERROR=$1
@@ -22,10 +27,11 @@ usage()
 		Usage: $0 [OPTION] [input-file]..
 			
 		-f
-			Specify the fiename containing password.Encrypted password & ip will be redirect to stdout	 	
+			Specify the fiename containing password.Encrypted password & ip will be redirect to $FILENAME
               		FORMAT: File must contain ip & password on same line seperated with 'space or tab' with each set on new line e.g
 	        	192.168.1.1 password1 or 192.168.1.1	password1
 		        192.168.1.2 password2
+			LINES STARTING WITH '#' & 'space' WILL BE IGNORED		
 		
 		-s	
 			Specify password & ip on stdin,output will redirect to stdout
@@ -35,7 +41,8 @@ usage()
 			Specify two files containing password & ip respectively.Output will be redirected to ${FILENAME}
 		        FORMAT: Map both file with there contents i.e first line of passowrd_file, must contain the
 				PASSWORD for first IP, in ip_list_file.And Provide absoulte path
-		
+			LINES STARTING WITH '#' & 'space' WILL BE IGNORED		
+
 				
 		NOTE: IF MULTIPLE OPTIONS PROVIDED SAME WILL BE PROCESSED IN ABOVE SEQUENCE
 	e.g
@@ -43,7 +50,7 @@ usage()
 		$0 -f  filename
 		$0 -g 'file1 file2'
 	"
-	exit 	
+	exit ${!ERROR}
 }
 
 logic_encrypt()
@@ -55,8 +62,8 @@ logic_encrypt()
                 do
                         pass=$(echo "$pass" | base64 -w 0)
                 done
-		iter=$(echo "$iter" | base64);ip=$(echo "$ip" | base64)
-        echo -e "$ip&$pass&$iter"
+		iter=$(echo "$iter" | base64)
+        echo -e "$ip$pass&$iter"
 
 }
 	
@@ -71,11 +78,11 @@ do
 			;;
 		s)
 			std=(${OPTARG})
-			[[ "${std[1]}" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]] || usage "Syntax_error=Invalid IP" 
+			[[ "${std[1]}" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]] || usage "SYNTAX_ERROR" 
 			;;
 		g)
 			files=(${OPTARG})
-			[[ -s "${files[0]}" && -s "${files[1]}" ]] || usage FILES_DOES_NOT_EXIST
+			[[ -s "${files[0]}" && -s "${files[1]}" ]] || usage FILE_NOT_EXIST
 	esac
 done
 
@@ -89,6 +96,7 @@ if [[ ! -z "$file" ]];then
 
 	while IFS=$'\n' read -r field
 	do
+		echo "$field" | grep -q '^#\|^$' && continue;
 		f1=$(echo "$field" | awk '{print$1}')
 		f2=$(echo "$field" | awk '{print$2}')
 		[ -z "$f1" ] || [ -z "$f2" ]  && usage FILE_FORMAT
@@ -96,11 +104,11 @@ if [[ ! -z "$file" ]];then
 		echo "$f1" | grep -qo ^$ip_patt$;rc=$?
 		echo "$f2" | grep -qo ^$ip_patt$;rc2=$?
 		{ [ $rc -eq 0 ] && ip="$f1" && pass="$f2"; } || { [ $rc2 -eq 0 ] && ip="$f2" && pass="$f1"; } \
-		|| usage FILE_FORMAT		
+        	|| usage FILE_FORMAT		
 		
 		fin=$(logic_encrypt "$pass" "$ip")
 		
-		echo "$fin"
+		echo "$fin" >> "$FILENAME"
 	done < "$file"
 fi
 		
@@ -127,6 +135,7 @@ if [[ ! -z "${files[@]}" ]];then
 
 	while IFS=$'\n' read -r field
 	do
+		echo "$field" | grep -q '^#\|^$' && continue
 		ip=$(echo "$field" | awk '{print$1}')
 		pass=$(echo "$field" | awk '{print$2}')
 	

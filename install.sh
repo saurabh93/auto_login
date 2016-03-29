@@ -18,13 +18,13 @@ count=0
 FILENAME='encrypt.file'
 
 #ERROR's
-NO_PARAM=67
-NO_PERM=68
-NO_FILE_OR_DIR=65
-NO_INP=66
-CMD_NOT_FOUND=70
-FILE_FORMAT=71
-SYNTAX_ERROR=72
+E_NO_PARAM=67
+E_NO_PERM=68
+E_NO_FILE_OR_DIR=65
+E_NO_INP=66
+E_CMD_NOT_FOUND=70=70
+E_FILE_FORMAT=71
+E_SYNTAX_ERROR=72
 
 #ARRAYS
 CMD_LIST=(bash expect gpg ssh)
@@ -39,7 +39,7 @@ trap 'echo "EXIT CODE:$?";exit' EXIT
 
 check_command_exist() 
 {
-	test "$#" -eq 0 && exit "$NO_PARAM" #Checking Number of Arguments
+	test "$#" -eq 0 && exit "$E_NO_PARAM" #Checking Number of Arguments
 	
 	#Check commands exist or not
 	for inp in "${@}"
@@ -74,7 +74,7 @@ check_run_time()
 	for cmd in "${@}"
 	do
 		cmd_status=$(grep "^${cmd}" ${lib_path}/${conf} | awk '{print$2}') #Get status from ${conf} file
-		if [[ "$cmd_status" -ne 0 ]];then
+		if [[ "$cmd_status" -ne 0 || -z "$cmd_status" ]];then
 			sed -i "s:^${cmd}::g;/^:/d" ${lib_path}/${conf}	#Remove Entry of command/file from ${conf}
 			{ [[ "$cmd" =~ f.[a-z] ]] && check_files "$cmd"; } || check_command_exist "$cmd" #Update status of CMD/Files	
 			count=$((count+1)) #Increase count for FILE/CMD not found status
@@ -83,16 +83,20 @@ check_run_time()
 	
 	if [[ "$count" -gt 6 ]];then #Since number of files are 5 
 		cmd_status="$(grep 1 ${lib_path}/${conf} | grep -v "^f" | awk '{print$1}' | tr -d '\n')"
-		test ! -z "$cmd_status" && echo "Commands $cmd_status does not exist" && exit ${CMD_NOT_FOUND}
+		test ! -z "$cmd_status" && echo "Commands $cmd_status does not exist" && exit ${E_CMD_NOT_FOUND=70}
 	fi
 	sleep 2
 }
 		
 #Search prerequisites
 
-{ test -f ${lib_path}/${conf}  && check_run_time "${CMD_LIST[@]}" "${FILE_LIST[@]}"; }|| \
-{ mkdir -p ${lib_path} || exit ${DIR_PERM} && echo "Checking Pre-requisites" && \
- check_command_exist "${CMD_LIST[@]}" && check_files "${FILE_LIST[@]}"; } 
+if [[ -f ${lib_path}/${conf} ]];then
+	check_run_time "${CMD_LIST[@]}" "${FILE_LIST[@]}"
+else
+	mkdir -p "${lib_path}" || exit "${E_NO_FILE_OR_DIR}"
+	echo -e "Checking Pre-requisites"
+	check_command_exist "${CMD_LIST[@]}" && check_files "${FILE_LIST[@]}"
+fi
 
 
 echo -e "Checking files for copying."
@@ -101,13 +105,16 @@ do
 	status=$(fgrep ${FILE_LIST[$num]} ${lib_path}/${conf} | awk '{print$2}')
 
 	[[ "$status" -eq 1 ]] && count=$((count+1)) 
+
 	if [[ "$count" -eq 3 ]];then #If true copy files from /etc/skel or create .bashrc & update ${conf}
 	    { [[ -f /etc/skel/${FILE_LIST[0]:1} ]] && cp -v /etc/skel/${FILE_LIST[0]:1} ${HOME} && check_run_time ${FILE_LIST[0]}; } || \
-	       { touch ${HOME}/.bashrc && check_run_time ${FILE_LIST[0]}; }|| exit "${NO_PERM}" 
+	       { touch ${HOME}/.bashrc && check_run_time ${FILE_LIST[0]}; }|| exit "${E_NO_PERM}" 
 	fi
 done
 
 sleep 1
+
+
 #GPG check
 
 for files in "${FILE_LIST[@]:3:1}"
@@ -116,32 +123,34 @@ do
 	
 	if [[ "$status" -eq 1 ]];then
 		echo -e "gpg is not setup.Want to setup Y/N?"
-		read -t 200 ans || exit ${NO_INP}
+		read -t 200 ans || exit ${E_NO_INP}
 		
 		if [[ "$ans" = 'Y' ]];then
 			gpg --gen-key
 		else
 			echo "NO INPUT"
-			exit ${NO_INP}
+			exit ${E_NO_INP}
 		fi
 	fi
 done
 
 sleep 2
 ##Password file genration
-{ [ -s "$src"/${SRC_LIST[0]} ] && [ -s "$src"/${SRC_LIST[1]} ] && [ -s "$src"/${SRC_LIST[2]} ]; } || \
-{ echo "Source file list Not Present.Check $src directory exist & files ${SRC_LIST[@]} are present." && exit ${NO_FILE_OR_DIR}; }
-cd "$src" && cp "${SRC_LIST[@]}" ${lib_path} || exit ${NO_PERM}
+{ [[ -s "$src"/${SRC_LIST[0]} ]] && [[ -s "$src"/${SRC_LIST[1]} ]] && [[ -s "$src"/${SRC_LIST[2]} ]]; } || \
+{ echo "Source file list Not Present.Check $src directory exist & files ${SRC_LIST[@]} are present." && exit ${E_NO_FILE_OR_DIR}; }
+cd "$src" && cp "${SRC_LIST[@]}" ${lib_path} || exit ${E_NO_PERM}
 
+#Get Input from User
 printf %b "\nPlease provide the file with password & ip list With below Mentioned Format.
 FORMAT: File must contain ip & password on same line seperated with 'space or tab' with each set on new line e.g
 192.168.1.1 password1 or 192.168.1.1	password1
 192.168.1.2 password2 (Please provide absolute path)\n"
 sleep 2
 
-read -t 200 -rp "Enter FileName=" file_name || { echo "NO INPUT" && exit ${NO_INP}; }
-[ -s "$file_name" ] || exit ${NO_FILE_OR_DIR}
+read -t 200 -rp "Enter FileName=" file_name || { echo "NO INPUT" && exit ${E_NO_INP}; }
+[ -s "$file_name" ] || exit ${E_NO_FILE_OR_DIR}
 
-"$src"/./pass_gen.sh -f "$file_name" 1> /dev/null && mv "$FILENAME" ${lib_path} && \
+#Encode file & encrypt with gpg
+"$src"/./pass_gen.sh -f "$file_name" 1> /dev/null && mv "${FILENAME}.gpg" ${lib_path} && \
 echo -e "You may use $src/${SRC_LIST[2]} script to create Encrypted password file any time"
 

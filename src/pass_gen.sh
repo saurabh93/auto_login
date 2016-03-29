@@ -7,6 +7,7 @@
 ########################
 
 
+clear #Clear screen
 
 array=(5 7 8 3 2 9 4 6 5 8)
 tmpfile='tmp'
@@ -14,9 +15,9 @@ FILENAME='encrypt.file'
 ip_patt='[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}'
 
 #ERRORS
-FILE_NOT_EXIST=65
-FILE_FORMAT=71
-SYNTAX_ERROR=72
+E_NO_FILE_OR_DIR=65
+E_FILE_FORMAT=71
+E_SYNTAX_ERROR=72
 
 usage()
 {
@@ -66,6 +67,15 @@ logic_encrypt()
         echo -e "$ip$pass&$iter"
 
 }
+
+encrypt_file()
+{
+	enc_file=$1
+	echo -e "Encrypting Files.Enter password for gpg when prompted"
+        gpg -s --encrypt "$enc_file"
+
+        rm "$FILENAME"
+}
 	
 while getopts "f:s:g:" arg
 do
@@ -74,15 +84,15 @@ do
 		
 		f)
 			file=${OPTARG}
-			[[ -s "$file" ]] || usage FILE_NOT_EXIST
+			[[ -s "$file" ]] || usage E_NO_FILE_OR_DIR
 			;;
 		s)
 			std=(${OPTARG})
-			[[ "${std[1]}" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]] || usage "SYNTAX_ERROR" 
+			[[ "${std[1]}" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]] || usage "E_SYNTAX_ERROR" 
 			;;
 		g)
 			files=(${OPTARG})
-			[[ -s "${files[0]}" && -s "${files[1]}" ]] || usage FILE_NOT_EXIST
+			[[ -s "${files[0]}" && -s "${files[1]}" ]] || usage E_NO_FILE_OR_DIR
 	esac
 done
 
@@ -90,46 +100,49 @@ if [[ -z "$file" && -z "${std[@]}" && -z "${files[@]}" ]];then
 	usage
 fi
 
-	
+>"$FILENAME"	
 if [[ ! -z "$file" ]];then
-	echo "Encrypting Input file"
+	echo "Encoding Input file"
 
 	while IFS=$'\n' read -r field
 	do
 		echo "$field" | grep -q '^#\|^$' && continue;
 		f1=$(echo "$field" | awk '{print$1}')
 		f2=$(echo "$field" | awk '{print$2}')
-		[ -z "$f1" ] || [ -z "$f2" ]  && usage FILE_FORMAT
+		[ -z "$f1" ] || [ -z "$f2" ]  && usage E_FILE_FORMAT
 		
 		echo "$f1" | grep -qo ^$ip_patt$;rc=$?
 		echo "$f2" | grep -qo ^$ip_patt$;rc2=$?
 		{ [ $rc -eq 0 ] && ip="$f1" && pass="$f2"; } || { [ $rc2 -eq 0 ] && ip="$f2" && pass="$f1"; } \
-        	|| usage FILE_FORMAT		
+        	|| usage E_FILE_FORMAT		
 		
 		fin=$(logic_encrypt "$pass" "$ip")
 		
 		echo "$fin" >> "$FILENAME"
 	done < "$file"
+	
+	encrypt_file "$FILENAME"
 fi
 		
 if [[ ! -z "${std[@]}" ]];then
-	echo -e "\nEncrypting std Input"
+	echo -e "\nEncoding std Input"
 	
 	fin=$(logic_encrypt "${std[0]}" "${std[1]}")
 
+	echo -e "Copy below encoded output to your password file,encrypt the same with gpg & run update_auto."
 	echo "$fin"
 fi
 
 if [[ ! -z "${files[@]}" ]];then
 	
-	echo -e "\nCreating Encrypted file"
+	echo -e "\nCreating Encoded file"
 	
 	sed -n '1p' "${files[0]}" | grep -qo ^$ip_patt$;rc=$?
 	sed -n '1p' "${files[1]}" | grep -qo ^$ip_patt$;rc2=$?
 	
 	{ [ $rc -eq 0 ] && ip_file="${files[0]}" && pass_file="${files[1]}"; } || \
 	{ [ $rc2 -eq 0 ] && ip_file="${files[1]}" && pass_file="${files[0]}"; } \
-        || usage FILE_FORMAT
+        || usage E_FILE_FORMAT
 	
 	paste -d'\t' "${ip_file}" "${pass_file}" > "$tmpfile"
 
@@ -144,4 +157,6 @@ if [[ ! -z "${files[@]}" ]];then
 		echo "$fin" >> $FILENAME
 	done < "$tmpfile"
 	rm -vf "$tmpfile"
+	
+	encrypt_file "$FILENAME"
 fi

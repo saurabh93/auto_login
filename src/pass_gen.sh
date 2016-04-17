@@ -1,10 +1,10 @@
 #!/bin/bash
 
-######Description#######
-#Genrate Random password encrytion pattern.
-#Requires:File with password list or Provide password
-#Output: Will be genrated on stdout
-########################
+# ###############Description################
+#> Genrate Random password encrytion pattern.
+#> Requires: File with password list or Provide password
+#> Output  : According  Provided Option
+# ##########################################
 
 
 clear #Clear screen
@@ -18,12 +18,13 @@ ip_patt='[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}'
 E_NO_FILE_OR_DIR=65
 E_FILE_FORMAT=71
 E_SYNTAX_ERROR=72
+E_GPG_PASSWORD=73
 
 usage()
 {
 	ERROR=$1
 	ERROR=${ERROR:-No_ERROR}
-	echo "ERROR: $ERROR"
+	echo "ERROR: $ERROR" >&2
 	echo -e "
 		Usage: $0 [OPTION] [input-file]..
 			
@@ -72,8 +73,9 @@ encrypt_file()
 {
 	enc_file=$1
 	echo -e "Encrypting Files.Enter password for gpg when prompted"
-        gpg -s --encrypt "$enc_file"
-
+        gpg --no-use-agent -s --encrypt "$enc_file"
+	
+	test "$?" -ne 0 && exit 1
         rm "$FILENAME"
 }
 	

@@ -124,8 +124,8 @@ do
 	[[ "$status" -eq 1 ]] && count=$((count+1)) 
 
 	if [[ "$count" -eq 3 ]];then # If true copy files from /etc/skel or create .bashrc & update ${conf}
-	    { [[ -f /etc/skel/${FILE_LIST[0]:1} ]] && cp -v /etc/skel/${FILE_LIST[0]:1} ${HOME} && check_run_time ${FILE_LIST[0]}; } || \
-	       { touch ${HOME}/.bashrc && check_run_time ${FILE_LIST[0]}; }|| exit "${E_NO_PERM}" 
+	    { [[ -r /etc/skel/${FILE_LIST[0]:1} ]] && cp -v /etc/skel/${FILE_LIST[0]:1} ${HOME} && check_run_time ${FILE_LIST[0]}; } || \
+	    { printf "# ~/.bashrc" > ${HOME}/${FILE_LIST[0]:1} && check_run_time ${FILE_LIST[0]}; }|| exit "${E_NO_PERM}" 
 	fi
 done
 

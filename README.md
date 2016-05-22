@@ -19,6 +19,13 @@ GNUPG:
 GnuPG allows to encrypt and sign your data and communication.
 By default most of the linux system include gnugpg.
 
+Bash:
+Bash is the shell, or command language interpreter, for the GNU operating system.By default most of the linux system has default bash shell
+
+ssh:
+ssh stands for Secure Socket Shell.Through you can access the another computer shell over network.
+
+
 
 
 

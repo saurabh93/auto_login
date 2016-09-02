@@ -11,9 +11,6 @@ Expect:
 Expect is a tool for automating interactive applications such as telnet, ftp, passwd, fsck, rlogin, tip, etc. 
 https://sourceforge.net/projects/expect/
 
-In ubutnu you may type
-sudo apt-get install expect
-
 
 GNUPG:
 GnuPG allows to encrypt and sign your data and communication.
@@ -23,7 +20,7 @@ Bash:
 Bash is the shell, or command language interpreter, for the GNU operating system.By default most of the linux system has default bash shell
 
 ssh:
-ssh stands for Secure Socket Shell.Through you can access the another computer shell over network.
+ssh stands for Secure Socket Shell.Through which you can access the another computer shell over network.
 
 
 

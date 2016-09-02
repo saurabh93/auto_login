@@ -10,13 +10,15 @@
 clear #Clear screen
 
 CURR_DIR=$(pwd)
-. "$CURR_DIR"/src/err_hndl.sh
+SCRIPT_DIR=$(dirname $0)
+
+. "${CURR_DIR}"/"${SCRIPT_DIR}"/src/err_hndl.sh
 
 # Variables
 HOME=${HOME:-$(dirname "$(pwd)")}
 lib_path=${HOME}/.lib_auto
 conf='auto_login.conf'
-src="${CURR_DIR}"/src
+src="${CURR_DIR}"/"${SCRIPT_DIR}"/src
 count=0
 FILENAME='encrypt.file'
 lineno=""
@@ -111,7 +113,7 @@ fi
 # Check All neccessary commands exist or not
 
 cmd_status="$(grep 1 ${lib_path}/${conf} | grep -v "^f" | awk '{print$1}' | tr -d '\n')"
-test ! -z "$cmd_status" && echo "Commands $cmd_status not found on system" >&2 && exit ${E_CMD_NOT_FOUND}
+test ! -z "$cmd_status" && echo "$cmd_status command(s) not found" >&2 && exit ${E_CMD_NOT_FOUND}
 
 
 # Copy bash Enviorment from /etc/skel directory or create .bashrc
@@ -134,7 +136,7 @@ sleep 1
 
 # GPG check
 
-for files in "${FILE_LIST[@]:3:1}"
+for files in "${FILE_LIST[@]:3:2}"
 do
 	status=$(grep ${files} ${lib_path}/${conf} | awk '{print$2}')
 	
@@ -145,7 +147,7 @@ do
 		if [[ "$ans" = 'Y' ]];then
 			gpg --gen-key
 		else
-			echo "Enter 'Y' to continue" >&2
+			echo "GPG not setup" >&2
 			lineno="${LINENO:-$EMP}"
 			exit ${E_NO_INP}
 		fi
@@ -179,5 +181,5 @@ fi
 
 bash "$src"/pass_gen.sh -f "$file_name" 1> /dev/null 
 mv "${FILENAME}.gpg" ${lib_path} 
-echo -e "You may use $src/${SRC_LIST[2]} script to create Encrypted password file any time";sleep 5
+echo -e "You may use ${lib_path}/${SRC_LIST[2]} script to create Encrypted password file any time";sleep 5
 

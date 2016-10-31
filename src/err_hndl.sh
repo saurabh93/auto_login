@@ -16,6 +16,7 @@ FUNCNAME_=""
 FILE=""
 ERR_DESC=""
 err_start=2
+line_count=""
 
 declare -a err_array
 
@@ -43,15 +44,17 @@ catch_exit()
                 tput setf 4
                 echo -e "ERROR DESCRIPTION:"
                 echo -e "${ERR_DESC%:}"
-   
+   		echo -e "NOTE: Error's found.If exit code is '0' program executed successfuly"
+
                 tput sgr0 #Reset tput
 		
 
 	else
 		FUNCNAME_=$1
 		if [[ -s "$ERR_FILE" ]];then
+			line_count=$(wc -l < $ERR_FILE)			
 			local IFS=:
-			read -r -a err_array < "$ERR_FILE"
+			err_array=($(cat $ERR_FILE))
 			unset IFS
 			
 			FILE=${err_array[0]:-UNKNOWN}
@@ -60,8 +63,11 @@ catch_exit()
 			# Fetching Line number if available
 			
 			[[ "$LINE_NO" =~ ([a-z]+)[[:space:]]([0-9]+) ]] && LINE_NO=${BASH_REMATCH[2]}
-			[[ "$LINE_NO" =~ ^[0-9]+ ]] || { LINE_NO=UNKNOWN && err_start=0; }
-			
+			[[ "$LINE_NO" =~ ^[0-9]+ ]] || LINE_NO=UNKNOWN 
+			[[ "$line_count" -gt 1 || "$LINE_NO" = "UNKNOWN" ]] && err_start=0
+
+			# Input all error in Variable
+
 			for ((i="$err_start";i<${#err_array[@]};i++))
 			do
 				ERR_DESC="$ERR_DESC  ${err_array[$i]}:"
@@ -83,6 +89,7 @@ catch_exit()
 			tput setf 4
 			echo -e "ERROR DESCRIPTION:"
 			echo -e "${ERR_DESC%:}"
+			echo -e "NOTE: Error's found.If exit code is '0' program executed successfuly"
 
 			tput sgr0 #Reset tput
 		
@@ -102,6 +109,7 @@ catch_exit()
                         tput setf 4
                         echo -e "ERROR DESCRIPTION:"
                         echo -e "UNKNOWN"
+			echo -e "NOTE: Error's found.If exit code is '0' program executed successfuly"
 
                         tput sgr0 #Reset tput
 

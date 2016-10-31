@@ -171,7 +171,7 @@ sleep 2
 
 echo -en "Enter Filename="
 read -r file_name || { lineno="$LINENO";echo "$NINP" >&2;exit ${E_NO_INP}; }
-if [[ ! -s "$file_name" ]] && [[ -d "$file_name" ]];then
+if [[ ! -s "$file_name" ]] || [[ -d "$file_name" ]];then
 	echo "File '$file_name' does not exist" >&2 
 	lineno="${LINENO:-UNKNOWN}" && exit ${E_NO_FILE_OR_DIR}
 fi

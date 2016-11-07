@@ -159,7 +159,7 @@ sleep 2
 # Copy files from "$src" to ${lib_path}
 
 cd "$src" 
-cp "${SRC_LIST[@]}" ${lib_path} || { lineno=${LINENO:-$EMP};echo "Check files $src/${SRC_LIST[@]} presents">&2;exit ${E_NO_PERM}; }
+cp -n "${SRC_LIST[@]}" ${lib_path} || { lineno=${LINENO:-$EMP};echo "Check files $src/${SRC_LIST[@]} presents">&2;exit ${E_NO_PERM}; }
 
 # Get Input from User
 

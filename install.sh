@@ -124,10 +124,11 @@ do
 	status=$(fgrep ${FILE_LIST[$num]} ${lib_path}/${conf} | awk '{print$2}')
 
 	[[ "$status" -eq 1 ]] && count=$((count+1)) 
-
+	[[ "$status" -eq 0 ]] && LOGIN_STARTUP=${FILE_LIST[$num]:1}
 	if [[ "$count" -eq 3 ]];then # If true copy files from /etc/skel or create .bashrc & update ${conf}
 	    { [[ -r /etc/skel/${FILE_LIST[0]:1} ]] && cp -v /etc/skel/${FILE_LIST[0]:1} ${HOME} && check_run_time ${FILE_LIST[0]}; } || \
-	    { printf "# ~/.bashrc" > ${HOME}/${FILE_LIST[0]:1} && check_run_time ${FILE_LIST[0]}; }|| exit "${E_NO_PERM}" 
+	    { printf "# ~/.bashrc" > ${HOME}/${FILE_LIST[0]:1} && check_run_time ${FILE_LIST[0]}; }|| exit "${E_NO_PERM}"
+		LOGIN_STARTUP=${FILE_LIST[0]:1} 
 	fi
 done
 

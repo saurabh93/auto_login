@@ -189,4 +189,4 @@ echo -e "You may use ${lib_path}/${SRC_LIST[2]} script to create Encrypted passw
 grep -q "#login_auto" $HOME/$LOGIN_STARTUP || echo -e "\n#login_auto lib \n. $lib_path/${SRC_LIST[0]}" >> $HOME/$LOGIN_STARTUP
 
 # Message
-echo -e "\nPlease source the $LOGIN_STARTUP file '. $HOME/$LOGIN_STARTUP' or login again"
+echo -e "\nPlease source the $LOGIN_STARTUP file '. $HOME/$LOGIN_STARTUP' or login again for the applied changes to take affect."

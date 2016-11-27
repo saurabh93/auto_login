@@ -22,6 +22,7 @@ src="${CURR_DIR}"/"${SCRIPT_DIR}"/src
 count=0
 FILENAME='encrypt.file'
 lineno=""
+LOGIN_STARTUP=""
 
 # ERROR's
 E_NO_ARG=67
@@ -159,6 +160,7 @@ sleep 2
 # Copy files from "$src" to ${lib_path}
 
 cd "$src" 
+chmod u+x "${SRC_LIST[@]}" || { lineno=${LINENO:-$EMP};exit ${E_NO_PERM}; }
 cp -n "${SRC_LIST[@]}" ${lib_path} || { lineno=${LINENO:-$EMP};echo "Check files $src/${SRC_LIST[@]} presents">&2;exit ${E_NO_PERM}; }
 
 # Get Input from User
@@ -183,3 +185,5 @@ bash "$src"/pass_gen.sh -f "$file_name" 1> /dev/null
 mv "${FILENAME}.gpg" ${lib_path} 
 echo -e "You may use ${lib_path}/${SRC_LIST[2]} script to create Encrypted password file any time";sleep 5
 
+# Adding $lib_path to $LOGIN_STARTUP file
+grep -q "#login_auto" $HOME/$LOGIN_STARTUP || echo -e "\n#login_auto lib \n. $lib_path/${SRC_LIST[0]}" >> $HOME/$LOGIN_STARTUP

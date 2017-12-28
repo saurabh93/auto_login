@@ -41,7 +41,7 @@ NINP='No INPUT PROVIDED'
 # ARRAYS
 CMD_LIST=(bash expect gpg ssh)
 FILE_LIST=(f.bashrc f.profile f.bash_profile f.gnupg/pubring.gpg f.gnupg/secring.gpg)
-SRC_LIST=(central.sh login.exp pass_gen.sh)
+SRC_LIST=(csource.sh login.exp pass_gen.sh)
 
 
 # Functions

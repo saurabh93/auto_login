@@ -64,7 +64,12 @@ catch_exit()
 			
 			[[ "$LINE_NO" =~ ([a-z]+)[[:space:]]([0-9]+) ]] && LINE_NO=${BASH_REMATCH[2]}
 			[[ "$LINE_NO" =~ ^[0-9]+ ]] || LINE_NO=UNKNOWN 
-			[[ "$line_count" -gt 1 || "$LINE_NO" = "UNKNOWN" ]] && err_start=0
+			
+			# Setting err_start variable as per LINE_NO & FILE varibale values
+			if [[ $LINE_NO = UNKNOWN ]];then
+				[[ $FILE != UNKNOWN ]] && err_start=1
+				[[ $FILE  = UNKNOWN ]] && err_start=0
+			fi
 
 			# Input all error in Variable
 

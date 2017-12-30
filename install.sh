@@ -41,7 +41,7 @@ NINP='No INPUT PROVIDED'
 # ARRAYS
 CMD_LIST=(bash expect gpg ssh)
 FILE_LIST=(f.bashrc f.profile f.bash_profile f.gnupg/pubring.gpg f.gnupg/secring.gpg)
-SRC_LIST=(central.sh login.exp pass_gen.sh)
+SRC_LIST=(csource.sh login.exp pass_gen.sh)
 
 
 # Functions
@@ -190,3 +190,5 @@ grep -q "#login_auto" $HOME/$LOGIN_STARTUP || echo -e "\n#login_auto lib \n. $li
 
 # Message
 echo -e "\nPlease source the $LOGIN_STARTUP file '. $HOME/$LOGIN_STARTUP' or login again for the applied changes to take affect."
+echo -e "\nType auto_login(without arguments) on shell for more information on commands."
+exit 0

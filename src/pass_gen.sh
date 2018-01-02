@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # ###############Description################
-#> Genrate Random password encrytion pattern.
-#> Requires: File with password list or Provide password
-#> Output  : According  Provided Option
+#> Generate encoded ip,password file.
+#> Requires: Password & IP list in file or via standard input.
+#> Output  : Output will be in encrypted file or on std-out
 # ##########################################
 
 
@@ -13,6 +13,8 @@ array=(5 7 8 3 2 9 4 6 5 8)
 tmpfile='tmp'
 FILENAME='encrypt.file'
 ip_patt='[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}'
+passFile=''
+oldEncryptFile='oldEncryptFile'
 
 #ERRORS
 E_NO_FILE_OR_DIR=65
@@ -30,7 +32,7 @@ usage()
 			
 		-f
 			Specify the fiename containing password.Encrypted password & ip will be redirect to $FILENAME
-              		FORMAT: File must contain ip & password on same line seperated with 'space or tab' with each set on new line e.g
+              		FORMAT: File must contain ip & password on same line separated with 'space or tab' with each set on new line e.g
 	        	192.168.1.1 password1 or 192.168.1.1	password1
 		        192.168.1.2 password2
 			LINES STARTING WITH '#' & 'space' WILL BE IGNORED		
@@ -41,18 +43,27 @@ usage()
 
 		-g	
 			Specify two files containing password & ip respectively.Output will be redirected to ${FILENAME}
-		        FORMAT: Map both file with there contents i.e first line of passowrd_file, must contain the
-				PASSWORD for first IP, in ip_list_file.And Provide absoulte path
+		        FORMAT: Map both file with there contents i.e first line of password_file, must contain the
+				PASSWORD for first IP, in ip_list_file.And Provide absolute path
 			LINES STARTING WITH '#' & 'space' WILL BE IGNORED		
-
+                -u
+                        Update/Modify the existing encrypted file with the new data.Data will be provided by user through
+                        other script parameter e.g '-f' or '-s'. One parameter is mandatory with this option.
+                        FORMAT:see e.g below
 				
 		NOTE: IF MULTIPLE OPTIONS PROVIDED SAME WILL BE PROCESSED IN ABOVE SEQUENCE
 	e.g
 		$0 -s 'password ip' (sequence should be as shown)
 		$0 -f  filename
 		$0 -g 'file1 file2'
+                $0 -f  filename -u 'location of encrypted file'
 	"
 	exit ${!ERROR}
+}
+
+clean_files()
+{
+    rm $FILENAME ${oldEncryptFile} ${tmpfile} ${tmpfile}.1
 }
 
 logic_encrypt()
@@ -75,11 +86,36 @@ encrypt_file()
 	echo -e "Encrypting Files.Enter password for gpg when prompted"
         gpg --no-use-agent -s --encrypt "$enc_file"
 	
-	test "$?" -ne 0 && exit 1
-        rm "$FILENAME"
+	test "$?" -ne 0 && clean_files && exit 1
+        clean_files
 }
+
+update_file()
+{
+        local inp=$1
+
+	echo -n "Enter your gpg key password when prompted."
+	gpg -d ${passFile} > ${oldEncryptFile}
+
+	test $? -ne 0 && clean_files && exit 1
 	
-while getopts "f:s:g:" arg
+	# If update_file() is called through standard input(-s) option than
+	# invert the grep matching as per value in $inp variable, else assume
+	# -f or -g options are used & invert the grep matching as per $FILENAME.
+
+	if [[ ! -z $inp ]];then
+	    grep -v "$inp" ${oldEncryptFile} > ${tmpfile} 
+	    cat ${tmpfile} >> $FILENAME
+	    encrypt_file $FILENAME
+	else
+	    grep -o ${ip_patt} $FILENAME > ${tmpfile}
+	    grep -v -f ${tmpfile} ${oldEncryptFile} > ${tmpfile}.1
+	    cat ${tmpfile}.1 >> $FILENAME
+	fi
+
+}
+
+while getopts "f:s:g:u:h" arg
 do
 
 	case ${arg} in
@@ -95,6 +131,14 @@ do
 		g)
 			files=(${OPTARG})
 			[[ -s "${files[0]}" && -s "${files[1]}" ]] || usage E_NO_FILE_OR_DIR
+			;;
+		u)
+		        passFile=${OPTARG}
+			[[ -s "${passFile}" && ! -d "${passFile}" ]] || usage FILE_NOT_EXIST
+			;;
+	        h)
+		        usage
+			;;
 	esac
 done
 
@@ -123,6 +167,7 @@ if [[ ! -z "$file" ]];then
 		echo "$fin" >> "$FILENAME"
 	done < "$file"
 	
+	[[ ! -z ${passFile} ]] && update_file
 	encrypt_file "$FILENAME"
 fi
 		
@@ -131,8 +176,12 @@ if [[ ! -z "${std[@]}" ]];then
 	
 	fin=$(logic_encrypt "${std[0]}" "${std[1]}")
 
-	echo -e "Copy below encoded output to your password file,encrypt the same with gpg & run update_auto."
-	echo "$fin"
+	if [[ ! -z ${passFile} ]];then
+	    echo $fin >> $FILENAME && update_file ${std[1]}
+	else
+	    echo -e "Copy below encoded output to your password file,encrypt the same with gpg."
+	    echo "$fin"
+	fi
 fi
 
 if [[ ! -z "${files[@]}" ]];then
@@ -160,5 +209,6 @@ if [[ ! -z "${files[@]}" ]];then
 	done < "$tmpfile"
 	rm -vf "$tmpfile"
 	
+	[[ ! -z ${passFile} ]] && update_file
 	encrypt_file "$FILENAME"
 fi

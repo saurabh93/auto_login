@@ -28,7 +28,7 @@ usage()
 	ERROR=${ERROR:-No_ERROR}
 	echo "ERROR: $ERROR" >&2
 	echo -e "
-		Usage: $0 [OPTION] [input-file]..
+		Usage: $0 [OPTION]... [input-file] [std-in] -u [SOURCE]
 			
 		-f
 			Specify the fiename containing password.Encrypted password & ip will be redirect to $FILENAME

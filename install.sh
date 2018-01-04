@@ -41,7 +41,7 @@ NINP='No INPUT PROVIDED'
 # ARRAYS
 CMD_LIST=(bash expect gpg ssh)
 FILE_LIST=(f.bashrc f.profile f.bash_profile f.gnupg/pubring.gpg f.gnupg/secring.gpg)
-SRC_LIST=(csource.sh login.exp pass_gen.sh)
+SRC_LIST=(csource login pass_gen)
 
 
 # Functions
@@ -181,7 +181,7 @@ fi
 
 # Encode file & encrypt them.
 
-bash "$src"/pass_gen.sh -f "$file_name" 1> /dev/null 
+bash "$src"/pass_gen -f "$file_name" 1> /dev/null 
 mv "${FILENAME}.gpg" ${lib_path} 
 echo -e "You may use ${lib_path}/${SRC_LIST[2]} script to create Encrypted password file any time";sleep 5
 

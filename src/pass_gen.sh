@@ -28,7 +28,7 @@ usage()
 	ERROR=${ERROR:-No_ERROR}
 	echo "ERROR: $ERROR" >&2
 	echo -e "
-		Usage: $0 [OPTION]... [input-file] [std-in] -u [SOURCE]
+		Usage: ${0//*\//} [OPTION]... [input-file] [std-in] -u [SOURCE]
 			
 		-f
 			Specify the fiename containing password.Encrypted password & ip will be redirect to $FILENAME
@@ -53,10 +53,10 @@ usage()
 				
 		NOTE: IF MULTIPLE OPTIONS PROVIDED SAME WILL BE PROCESSED IN ABOVE SEQUENCE
 	e.g
-		$0 -s 'password ip' (sequence should be as shown)
-		$0 -f  filename
-		$0 -g 'file1 file2'
-                $0 -f  filename -u 'location of encrypted file'
+		${0//*\//} -s 'password ip' (sequence should be as shown)
+		${0//*\//} -f  filename
+		${0//*\//} -g 'file1 file2'
+                ${0//*\//} -f  filename -u 'location of encrypted file'
 	"
 	exit ${!ERROR}
 }
